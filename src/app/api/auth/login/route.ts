@@ -6,26 +6,49 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Iniciando proceso de login...');
+    
     const body = await request.json();
     const { username, password } = body;
 
+    console.log('Datos recibidos:', { username, password: password ? '***' : 'vacío' });
+
     if (!username || !password) {
+      console.log('Error: Faltan credenciales');
       return NextResponse.json(
         { error: 'Usuario y contraseña son requeridos' },
         { status: 400 }
       );
     }
 
+    // Verificar conexión a la base de datos
+    try {
+      await prisma.$connect();
+      console.log('Conexión a la base de datos exitosa');
+    } catch (dbError) {
+      console.error('Error de conexión a la base de datos:', dbError);
+      return NextResponse.json(
+        { error: 'Error de conexión a la base de datos' },
+        { status: 500 }
+      );
+    }
+
+    // Buscar usuario
     const user = await prisma.user.findUnique({
       where: { username }
     });
 
+    console.log('Usuario encontrado:', user ? 'Sí' : 'No');
+
     if (!user || user.password !== password) {
+      console.log('Credenciales inválidas');
       return NextResponse.json(
         { error: 'Credenciales inválidas' },
         { status: 401 }
       );
     }
+
+    console.log('Login exitoso para usuario:', username);
 
     // Respuesta simple con token básico
     const response = NextResponse.json(
@@ -52,7 +75,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error en login:', error);
     return NextResponse.json(
-      { error: 'Error en el servidor' },
+      { error: 'Error en el servidor', details: error instanceof Error ? error.message : 'Error desconocido' },
       { status: 500 }
     );
   }

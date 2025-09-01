@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const router = useRouter();
   const toast = useToast();
 
@@ -67,15 +68,55 @@ export default function LoginPage() {
         window.location.href = '/';
       }
     } catch (error) {
+      console.error('Error en login:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión';
+      
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Error al iniciar sesión',
+        title: 'Error de autenticación',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleInitialize = async () => {
+    setIsInitializing(true);
+    try {
+      const response = await fetch('/api/auth/init', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al inicializar el sistema');
+      }
+
+      toast({
+        title: 'Sistema inicializado',
+        description: data.message,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error al inicializar:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Error al inicializar el sistema',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsInitializing(false);
     }
   };
 
@@ -134,6 +175,20 @@ export default function LoginPage() {
                 transition={{ delay: 0.3 }}
               >
                 <Heading size="lg" color="blue.600">Iniciar Sesión</Heading>
+                <Box 
+                  p={4} 
+                  bg="blue.50" 
+                  rounded="md" 
+                  border="1px solid" 
+                  borderColor="blue.200"
+                  fontSize="sm"
+                >
+                  <Text fontWeight="bold" color="blue.700" mb={2}>
+                    Credenciales por defecto:
+                  </Text>
+                  <Text color="blue.600">Usuario: <strong>vladi</strong></Text>
+                  <Text color="blue.600">Contraseña: <strong>vladi2025</strong></Text>
+                </Box>
                 <Box as="form" onSubmit={handleSubmit} w="full">
                   <VStack spacing={4}>
                     <FormControl isRequired>
@@ -191,6 +246,22 @@ export default function LoginPage() {
                       transition="all 0.2s"
                     >
                       Iniciar Sesión
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      colorScheme="blue"
+                      size="md"
+                      width="full"
+                      isLoading={isInitializing}
+                      onClick={handleInitialize}
+                      _hover={{
+                        transform: 'translateY(-1px)',
+                        boxShadow: 'md',
+                      }}
+                      transition="all 0.2s"
+                    >
+                      Inicializar Sistema
                     </Button>
                   </VStack>
                 </Box>
