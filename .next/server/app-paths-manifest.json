@@ -1,8 +1,0 @@
-{
-  "/administracion/page": "app/administracion/page.js",
-  "/api/auth/logout/route": "app/api/auth/logout/route.js",
-  "/(main)/page": "app/(main)/page.js",
-  "/login/page": "app/login/page.js",
-  "/(main)/ventas/page": "app/(main)/ventas/page.js",
-  "/(main)/productos/page": "app/(main)/productos/page.js"
-}
