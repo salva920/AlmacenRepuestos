@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Float
+  stock       Int
+  minStock    Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  lotes       LoteProducto[]
+  items       SaleItem[]
+}
+
+model Customer {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  cedula    String   @unique
+  email     String?  @unique
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sales     Sale[]
+}
+
+model Sale {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  customerId    String
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  total         Float
+  ganancia      Float       @default(0)
+  status        String      @default("pending")
+  invoiceNumber String
+  paymentType   String
+  paymentMethod String
+  bank          String?
+  amountPaid    Float?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         SaleItem[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  sale      Sale     @relation(fields: [saleId], references: [id])
+  saleId    String   @db.ObjectId
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String   @db.ObjectId
+  quantity  Int
+  price     Float
+  ganancia  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TasaCambio {
+  id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  tasa  Float
+  fecha DateTime @default(now())
+}
+
+model Transaccion {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  fecha       DateTime @default(now())
+  concepto    String
+  moneda      String
+  entrada     Float    @default(0)
+  salida      Float    @default(0)
+  saldo       Float    @default(0)
+  tasaCambio  Float    @default(0)
+}
+
+model Gasto {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  fecha       DateTime @default(now())
+  concepto    String
+  categoria   String
+  monto       Float
+  moneda      String
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LoteProducto {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String   @db.ObjectId
+  cantidad    Int
+  stockActual Int
+  precio      Float
+  fechaIngreso DateTime @default(now())
+  product     Product  @relation(fields: [productId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  username  String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,204 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  FormLabel,
+  Input,
+  VStack,
+  Heading,
+  useToast,
+  useColorModeValue,
+  Text,
+  Image,
+  Flex,
+  InputGroup,
+  InputLeftElement,
+  Icon
+} from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { FiUser, FiLock, FiTool } from 'react-icons/fi';
+
+const MotionBox = motion(Box);
+const MotionVStack = motion(VStack);
+
+export default function LoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al iniciar sesión');
+      }
+
+      if (data.auth) {
+        localStorage.setItem('isLoggedIn', 'true');
+        
+        toast({
+          title: 'Login exitoso',
+          description: 'Redirigiendo al sistema...',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+
+        window.location.href = '/';
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Error al iniciar sesión',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Flex
+      minH="100vh"
+      bgGradient="linear(to-br, blue.500, blue.700)"
+      align="center"
+      justify="center"
+      p={4}
+    >
+      <Container maxW="container.sm">
+        <MotionBox
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            bg={useColorModeValue('white', 'gray.800')}
+            rounded="xl"
+            overflow="hidden"
+            boxShadow="2xl"
+          >
+            {/* Lado izquierdo - Imagen y título */}
+            <Box
+              w={{ base: '100%', md: '40%' }}
+              bg="blue.600"
+              p={8}
+              color="white"
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              textAlign="center"
+            >
+              <MotionBox
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                <Icon as={FiTool} w={16} h={16} mb={4} />
+              </MotionBox>
+              <Heading size="lg" mb={2}>Sistema de Repuestos</Heading>
+              <Text fontSize="sm" opacity={0.8}>
+                Gestión eficiente de inventario y ventas
+              </Text>
+            </Box>
+
+            {/* Lado derecho - Formulario */}
+            <Box w={{ base: '100%', md: '60%' }} p={8}>
+              <MotionVStack
+                spacing={6}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Heading size="lg" color="blue.600">Iniciar Sesión</Heading>
+                <Box as="form" onSubmit={handleSubmit} w="full">
+                  <VStack spacing={4}>
+                    <FormControl isRequired>
+                      <FormLabel>Usuario</FormLabel>
+                      <InputGroup>
+                        <InputLeftElement pointerEvents="none">
+                          <Icon as={FiUser} color="gray.400" />
+                        </InputLeftElement>
+                        <Input
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          placeholder="Ingrese su usuario"
+                          autoComplete="username"
+                          size="lg"
+                          rounded="md"
+                          _focus={{
+                            borderColor: 'blue.500',
+                            boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)',
+                          }}
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <FormControl isRequired>
+                      <FormLabel>Contraseña</FormLabel>
+                      <InputGroup>
+                        <InputLeftElement pointerEvents="none">
+                          <Icon as={FiLock} color="gray.400" />
+                        </InputLeftElement>
+                        <Input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Ingrese su contraseña"
+                          autoComplete="current-password"
+                          size="lg"
+                          rounded="md"
+                          _focus={{
+                            borderColor: 'blue.500',
+                            boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)',
+                          }}
+                        />
+                      </InputGroup>
+                    </FormControl>
+                    <Button
+                      type="submit"
+                      colorScheme="blue"
+                      size="lg"
+                      width="full"
+                      isLoading={isLoading}
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg',
+                      }}
+                      transition="all 0.2s"
+                    >
+                      Iniciar Sesión
+                    </Button>
+                  </VStack>
+                </Box>
+              </MotionVStack>
+            </Box>
+          </Flex>
+        </MotionBox>
+      </Container>
+    </Flex>
+  );
+} 
