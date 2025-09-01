@@ -27,8 +27,24 @@ export async function POST(request: NextRequest) {
       console.log('Conexión a la base de datos exitosa');
     } catch (dbError) {
       console.error('Error de conexión a la base de datos:', dbError);
+      
+      // Verificar si es un error de configuración
+      if (dbError instanceof Error && dbError.message.includes('DNS resolution')) {
+        return NextResponse.json(
+          { 
+            error: 'Error de configuración de base de datos',
+            details: 'Verifica que la DATABASE_URL esté configurada correctamente en Vercel',
+            suggestion: 'Ve a Settings > Environment Variables en Vercel y configura DATABASE_URL'
+          },
+          { status: 500 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: 'Error de conexión a la base de datos' },
+        { 
+          error: 'Error de conexión a la base de datos',
+          details: dbError instanceof Error ? dbError.message : 'Error desconocido'
+        },
         { status: 500 }
       );
     }

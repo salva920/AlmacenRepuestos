@@ -31,6 +31,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const router = useRouter();
   const toast = useToast();
 
@@ -117,6 +118,52 @@ export default function LoginPage() {
       });
     } finally {
       setIsInitializing(false);
+    }
+  };
+
+  const handleHealthCheck = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const response = await fetch('/api/health', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al verificar el estado del sistema');
+      }
+
+      // Mostrar información detallada
+      const recommendations = data.recommendations || [];
+      const message = recommendations.length > 0 
+        ? recommendations.join('\n• ') 
+        : 'Sistema funcionando correctamente';
+
+      toast({
+        title: 'Estado del Sistema',
+        description: message,
+        status: data.status === 'ok' ? 'success' : 'warning',
+        duration: 8000,
+        isClosable: true,
+      });
+
+      // Log detallado en consola
+      console.log('Health Check Result:', data);
+    } catch (error) {
+      console.error('Error en health check:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Error al verificar el sistema',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsCheckingHealth(false);
     }
   };
 
@@ -262,6 +309,22 @@ export default function LoginPage() {
                       transition="all 0.2s"
                     >
                       Inicializar Sistema
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      colorScheme="gray"
+                      size="sm"
+                      width="full"
+                      isLoading={isCheckingHealth}
+                      onClick={handleHealthCheck}
+                      _hover={{
+                        transform: 'translateY(-1px)',
+                        boxShadow: 'sm',
+                      }}
+                      transition="all 0.2s"
+                    >
+                      Verificar Estado del Sistema
                     </Button>
                   </VStack>
                 </Box>
